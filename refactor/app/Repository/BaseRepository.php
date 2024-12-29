@@ -61,6 +61,10 @@ class BaseRepository
         return $this->model->find($id);
     }
 
+    /**
+     * @param $array
+     * @return mixed
+     */
     public function with($array)
     {
         return $this->model->with($array);
@@ -83,9 +87,7 @@ class BaseRepository
      */
     public function findBySlug($slug)
     {
-
         return $this->model->where('slug', $slug)->first();
-
     }
 
     /**
@@ -129,10 +131,7 @@ class BaseRepository
      */
     public function validator(array $data = [], $rules = null, array $messages = [], array $customAttributes = [])
     {
-        if (is_null($rules)) {
-            $rules = $this->validationRules;
-        }
-
+        $rules = is_null($rules) ? $this->validationRules : $rules;
         return Validator::make($data, $rules, $messages, $customAttributes);
     }
 
@@ -166,9 +165,7 @@ class BaseRepository
      */
     public function update($id, array $data = [])
     {
-        $instance = $this->findOrFail($id);
-        $instance->update($data);
-        return $instance;
+        return $this->findOrFail($id)->update($data);
     }
 
     /**
@@ -178,28 +175,25 @@ class BaseRepository
      */
     public function delete($id)
     {
-        $model = $this->findOrFail($id);
-        $model->delete();
-        return $model;
+        return $this->findOrFail($id)->delete();
     }
 
     /**
+     * Validate the given validator instance.
      * @param \Illuminate\Validation\Validator $validator
      * @return bool
      * @throws ValidationException
      */
     protected function _validate(\Illuminate\Validation\Validator $validator)
     {
-        if (!empty($attributeNames = $this->validatorAttributeNames())) {
+        if ($attributeNames = $this->validatorAttributeNames()) {
             $validator->setAttributeNames($attributeNames);
         }
 
         if ($validator->fails()) {
-            return false;
             throw (new ValidationException)->setValidator($validator);
         }
 
         return true;
     }
-
 }
